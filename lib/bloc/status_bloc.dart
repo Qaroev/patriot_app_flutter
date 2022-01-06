@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:patriotapp/models/status.dart';
 import 'package:patriotapp/services/service_api.dart';
 
@@ -22,8 +23,14 @@ class StatusBloc extends Bloc<StatusEvents, StatusState> {
       case StatusEvents.fetchStatus:
         yield StatusLoadingState();
         try {
-          listStatus = await statusrepository.getStatus();
-          yield StatusLoadedState(status: listStatus);
+          var objects = await statusrepository.getObjects();
+          if (objects.isNotEmpty) {
+            if (objects[0].id.contains('/')) {
+              objects[0].id.replaceAll('/', '-');
+            }
+            listStatus = await statusrepository.getStatus(objects[0].id);
+            yield StatusLoadedState(status: listStatus);
+          }
         } on SocketException {
           yield StatusListErrorstate(
             error: ('No Internet'),
